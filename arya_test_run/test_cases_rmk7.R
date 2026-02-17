@@ -6,6 +6,7 @@
 # Load the AR_intersection function
 source("/Users/ag5276/Documents/Github/Rand_IV/arya test run/solve_coef_01.R")
 source("/Users/ag5276/Documents/Github/Rand_IV/arya test run/calculate_intersections_02.R")
+source("/Users/ag5276/Documents/Github/Rand_IV/arya test run/find_intervals_03.R")
 
 ################################################################################
 ## TEST 1: Linear functions with known intersection
@@ -312,5 +313,149 @@ if(interactive()){
 } else {
   # Run automatically if sourced
   test_6_real_data()
+}
+
+################################################################################
+## TEST 7: find_intervals with simple coefficients
+################################################################################
+
+test_7_find_intervals_simple <- function(){
+  cat("\n===============================================\n")
+  cat("TEST 7: find_intervals with simple coefficients\n")
+  cat("===============================================\n")
+  cat("AR1(β) = (β² - 2β + 3) / (4β² - β + 2)\n")
+  cat("AR2(β) = (2β² - β + 1) / (3β² - 2β + 1)\n")
+  cat("Expected: Intervals where AR1(β) < AR2(β)\n\n")
+  
+  # Define coefficients
+  coef1 <- c(1, -2, 3, 4, -1, 2)
+  coef2 <- c(2, -1, 1, 3, -2, 1)
+  
+  # Find intervals
+  result <- find_intervals(coef1, coef2)
+  
+  cat(sprintf("Found %d interval(s)\n", ncol(result)))
+  
+  if(ncol(result) > 0){
+    cat("\nInterval boundaries:\n")
+    for(i in 1:ncol(result)){
+      cat(sprintf("  [%.6f, %.6f]\n", result[1, i], result[2, i]))
+    }
+    
+    # Verify each interval
+    cat("\nVerification (testing midpoint of each interval):\n")
+    all_valid <- TRUE
+    
+    for(i in 1:ncol(result)){
+      left <- result[1, i]
+      right <- result[2, i]
+      
+      # Choose test point
+      if(!is.infinite(left) && !is.infinite(right)){
+        beta_test <- (left + right) / 2
+      } else if(is.infinite(left)){
+        beta_test <- right - 1
+      } else {
+        beta_test <- left + 1
+      }
+      
+      # Check if AR1 < AR2 at test point
+      is_below <- compare_AR(beta_test, coef1, coef2)
+      
+      cat(sprintf("  β = %.6f: AR1 < AR2? %s", beta_test, is_below))
+      
+      if(is_below){
+        cat(" ✓\n")
+      } else {
+        cat(" ✗\n")
+        all_valid <- FALSE
+      }
+    }
+    
+    if(all_valid){
+      cat("\n✓ TEST 7 PASSED\n")
+      return(TRUE)
+    } else {
+      cat("\n✗ TEST 7 FAILED\n")
+      return(FALSE)
+    }
+    
+  } else {
+    cat("\nNo intervals found (AR1 never below AR2)\n")
+    cat("\n✓ TEST 7 PASSED\n")
+    return(TRUE)
+  }
+}
+
+################################################################################
+## TEST 8: find_intervals with no intersections (always below)
+################################################################################
+
+test_8_no_intersection_always_below <- function(){
+  cat("\n===============================================\n")
+  cat("TEST 8: No intersections (AR1 always below AR2)\n")
+  cat("===============================================\n")
+  cat("AR1(β) = (β² + 5) / (β² + 1)\n")
+  cat("AR2(β) = (β² + 10) / (β² + 1)\n")
+  cat("Expected: Single interval (-∞, ∞)\n\n")
+  
+  # Define coefficients
+  coef1 <- c(1, 0, 5, 1, 0, 1)   # AR1 ≈ 5 for large |β|
+  coef2 <- c(1, 0, 10, 1, 0, 1)  # AR2 ≈ 10 for large |β|
+  
+  # Check for intersections
+  intersections <- AR_intersection(coef1, coef2)
+  cat(sprintf("Intersections found: %d\n", length(intersections)))
+  
+  if(length(intersections) != 0){
+    cat("\n✗ TEST 8 FAILED: Expected no intersections\n")
+    return(FALSE)
+  }
+  
+  # Find intervals
+  result <- find_intervals(coef1, coef2)
+  
+  cat(sprintf("Found %d interval(s)\n", ncol(result)))
+  
+  # Should return single interval (-Inf, Inf)
+  if(ncol(result) != 1){
+    cat("\n✗ TEST 8 FAILED: Expected exactly 1 interval\n")
+    return(FALSE)
+  }
+  
+  if(!is.infinite(result[1, 1]) || result[1, 1] >= 0){
+    cat("\n✗ TEST 8 FAILED: Left endpoint should be -Inf\n")
+    return(FALSE)
+  }
+  
+  if(!is.infinite(result[2, 1]) || result[2, 1] <= 0){
+    cat("\n✗ TEST 8 FAILED: Right endpoint should be +Inf\n")
+    return(FALSE)
+  }
+  
+  # Verify at multiple test points
+  cat("\nVerification at test points:\n")
+  test_points <- c(-100, -10, 0, 10, 100)
+  all_valid <- TRUE
+  
+  for(beta in test_points){
+    is_below <- compare_AR(beta, coef1, coef2)
+    cat(sprintf("  β = %.1f: AR1 < AR2? %s", beta, is_below))
+    
+    if(is_below){
+      cat(" ✓\n")
+    } else {
+      cat(" ✗\n")
+      all_valid <- FALSE
+    }
+  }
+  
+  if(all_valid){
+    cat("\n✓ TEST 8 PASSED\n")
+    return(TRUE)
+  } else {
+    cat("\n✗ TEST 8 FAILED\n")
+    return(FALSE)
+  }
 }
 
