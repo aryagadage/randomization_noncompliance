@@ -1,3 +1,27 @@
+## Main Function: Calculate all intersections
+################################################################################
+calculate_intersections_02 <- function(AR_sim_coef) {
+  # Calculate all intersection points between pairs of AR functions
+  #
+  # Arguments:
+  #   AR_sim_coef: matrix of AR coefficients (6 rows x n_simulations columns)
+  #
+  # Returns:
+  #   Sorted vector of unique intersection points
+  
+  nsim_permu <- ncol(AR_sim_coef)
+  
+  # Find intersections between all pairs of AR functions
+  intersects <- unlist(pbsapply(1:(nsim_permu-1), function(i) {
+    # For each function i, find intersections with all functions j > i
+    sapply((i+1):nsim_permu, function(j) {
+      AR_intersection(AR_sim_coef[, i], AR_sim_coef[, j])
+    })
+  }))
+  
+  # Return sorted unique intersections
+  return(sort(unique(intersects)))
+}
 ################################################################################
 ## AR_intersection Function
 ## Extracted from: 2_AR_inversion_algo1.R (lines 249-318)
