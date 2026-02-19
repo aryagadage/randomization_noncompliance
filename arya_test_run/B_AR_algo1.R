@@ -14,11 +14,6 @@
 # Load required libraries
 library(pbapply)
 
-# Source the 3 component functions
-source("/Users/ag5276/Documents/Github/Rand_IV/arya test run/solve_coef_01.R")
-source("/Users/ag5276/Documents/Github/Rand_IV/arya test run/calculate_intersections_02.R")
-source("/Users/ag5276/Documents/Github/Rand_IV/arya test run/find_intervals_03.R")
-
 
 # ==============================================================================
 # Main Function: AR Algorithm 1
