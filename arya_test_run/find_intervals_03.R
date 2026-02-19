@@ -1,6 +1,5 @@
-################################################################################
 ## find_intervals_03.R
-## Isolated Functions for Finding Confidence Set Intervals
+## Finding Confidence Set Intervals
 ################################################################################
 ##
 ## PURPOSE:
@@ -26,7 +25,7 @@
 ## Main Function: find_intervals
 ################################################################################
 
-find_intervals <- function(coef1, coef2) {
+find_intervals_03 <- function(coef1, coef2) {
   # Find intervals where AR_observed(β) < AR_permutation(β)
   #
   # This function solves a key question: "For which values of the treatment
@@ -219,3 +218,4 @@ compare_AR <- function(beta, coef1, coef2) {
     return(AR1 < AR2)
   }
 }
+
