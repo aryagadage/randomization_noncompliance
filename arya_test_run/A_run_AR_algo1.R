@@ -19,17 +19,26 @@ set.seed(1)  # For replication
 dir <- '/Users/ag5276/Documents/Github/Rand_IV/grace'
 setwd(dir)
 
+# Set working directory
+dir <- '/Users/ag5276/Documents/Github/Rand_IV/grace'
+code_dir <- '/Users/ag5276/Documents/Github/Rand_IV/arya test run'
+
+# Load supporting functions using paste0
+source(paste0(dir, '/2_gen_data.R'))
+
+# Load Algorithm 1 functions using file.path (better - handles slashes automatically)
+source(file.path(code_dir, 'B_solve_coef.R'))
+source(file.path(code_dir, 'B_calculate_intersections.R'))
+source(file.path(code_dir, 'B_find_intervals.R'))
+source(file.path(code_dir, 'B_AR_algo1.R'))
+
+
 # Load packages
 library(pbapply)
 library(ivreg)
 library(lmtest)
 library(sandwich)
 
-# Load supporting functions
-source('2_gen_data.R')  # For gen_assignment_CR_index
-
-# Load Algorithm 1
-source('AR_algo1_custom.R')
 
 cat("="*70, "\n")
 cat("ALGORITHM 1: AR PERMUTATION TEST ON ALO DATA\n")
