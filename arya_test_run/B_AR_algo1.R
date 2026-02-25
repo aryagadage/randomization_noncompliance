@@ -14,7 +14,10 @@
 # Load required libraries
 library(pbapply)
 
-
+# Source the 3 component functions
+source('B_solve_coef.R')
+source('B_calculate_intersections.R')
+source('B_find_intervals.R')
 # ==============================================================================
 # Main Function: AR Algorithm 1
 # ==============================================================================
@@ -84,7 +87,7 @@ AR_algo1_custom <- function(data_table, N1, N0, zsim, tol=1e-8, alpha=0.95) {
   
   # For each region between intersections, find which permutation gives the alpha quantile
   indices <- pblapply(1:(length(intersections_grid) + 1), function(index) {
-    find_quantile_index(index, AR_sim_coef, intersections_grid, alpha, tol)
+    find_quantile_index(index, AR_sim_coef, intersections_grid, 1 - alpha, tol)
   })
   
   cat("  ✓ Quantile indices found\n\n")
