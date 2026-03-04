@@ -19,10 +19,14 @@
 # Load required libraries
 library(pbapply)
 
-# Source the component functions
-source('B_solve_coef.R')
-source('B_calculate_intersections.R')
-source('B_find_intervals.R')
+# Source the component functions (assumes working directory is set correctly)
+# Load required libraries
+library(pbapply)
+
+# Source the component functions with full paths
+source('/Users/ag5276/Documents/Github/randomization_noncompliance/arya_test_run/B_solve_coef.R')
+source('/Users/ag5276/Documents/Github/randomization_noncompliance/arya_test_run/B_calculate_intersections.R')
+source('/Users/ag5276/Documents/Github/randomization_noncompliance/arya_test_run/B_find_intervals.R')
 
 # ==============================================================================
 # Main Function: AR Algorithm 2 (Fast Version)
@@ -90,15 +94,24 @@ AR_algo2_custom <- function(data_table, N1, N0, zsim, tol=1e-8, alpha=0.95) {
   }
   
   # ==========================================================================
-  # STEP 4: THE FAST LOOP - Jump between crossings
+  # STEP 4: THE FAST LOOP - Jump between crossings (OPTIMIZED)
   # ==========================================================================
   
   cat("Step 4: Fast loop - jumping between crossings...\n")
+  
+  # Pre-compute intersection table for fast lookup
+  cat("  Building intersection lookup table...\n")
+  intersections_with_indices <- list()
+  for (i in 1:ncol(AR_sim_coef)) {
+    intersections_with_indices[[i]] <- find_crossings_with_all(AR_sim_coef[, i], AR_sim_coef)
+  }
+  cat("  ✓ Lookup table built\n")
   
   # Initialize
   s <- find_quantile_R(1, AR_sim_coef, intersections_grid, alpha = 1 - alpha, tol = tol)
   s <- as.integer(s)
   v <- intersections_grid[1]  # Current threshold
+  ind_int_old <- 0  # Track previous index to prevent going backwards
   
   MaxIter <- length(intersections_grid)
   iter <- 0
@@ -113,8 +126,8 @@ AR_algo2_custom <- function(data_table, N1, N0, zsim, tol=1e-8, alpha=0.95) {
     # STEP 4.1: Find where CURRENT quantile crosses ALL other AR functions
     # ========================================================================
     
-    # Find intersections of AR_sim_coef[, s] with ALL other AR functions
-    int_current <- find_crossings_with_all(AR_sim_coef[, s], AR_sim_coef)
+    # Use pre-computed intersections (FAST!)
+    int_current <- intersections_with_indices[[s]]
     
     # Only keep intersections to the right of current threshold
     int_current <- int_current[int_current >= v]
@@ -136,6 +149,15 @@ AR_algo2_custom <- function(data_table, N1, N0, zsim, tol=1e-8, alpha=0.95) {
     
     # Find where this crossing is on the grid
     ind_int <- min(which(abs(intersections_grid - e_i) <= 2*tol))
+    ind_int <- max(ind_int, ind_int_old)  # Ensure we don't go backwards!
+    
+    # Handle case where no match found (increase tolerance)
+    tol_temp <- tol
+    while (ind_int == Inf) {
+      tol_temp <- tol_temp * 2
+      ind_int <- min(which(abs(intersections_grid - e_i) <= tol_temp))
+      ind_int <- max(ind_int, ind_int_old)
+    }
     
     # Check if we reached the end
     if (ind_int == length(intersections_grid)) {
@@ -149,8 +171,10 @@ AR_algo2_custom <- function(data_table, N1, N0, zsim, tol=1e-8, alpha=0.95) {
                          alpha = 1 - alpha, tol = tol)
     s <- as.integer(s)
     
-    # Print progress every 10 iterations
-    if (iter %% 10 == 0) {
+    ind_int_old <- ind_int + 1  # Update: next ind_int must be >= this
+    
+    # Print progress every 100 iterations (like Haoge)
+    if (iter %% 100 == 0) {
       cat("  Iteration:", iter, "| Threshold:", round(v, 4), "| Quantile index:", s, "\n")
     }
     

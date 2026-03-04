@@ -9,7 +9,7 @@
 # ==============================================================================
 
 rm(list=ls())
-set.seed(321)
+set.seed(31)
 
 # Set directories
 code_dir <- '/Users/ag5276/Documents/Github/randomization_noncompliance/arya_test_run'

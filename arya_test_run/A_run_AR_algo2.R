@@ -4,12 +4,10 @@
 # ==============================================================================
 
 rm(list=ls())
-set.seed(1)  # For replication
+set.seed(662)  # For replication
 
 # Set directories
 code_dir <- '/Users/ag5276/Documents/Github/randomization_noncompliance/arya_test_run'
-data_dir <- "/Users/ag5276/Documents/Github/randomization_noncompliance/arya_test_run/data/ALO_data.csv"
-setwd(data_dir)
 
 # Load packages
 library(pbapply)
@@ -18,10 +16,13 @@ library(lmtest)
 library(sandwich)
 
 # Load supporting functions
-source('2_gen_data.R')  # For gen_assignment_CR_index
+source(file.path(code_dir, 'B_gen_data.R'))  # For gen_assignment_CR_index
 
 # Load Algorithm 2
-source(file.path(code_dir, 'B_AR_algo2.R'))
+source('/Users/ag5276/Documents/Github/randomization_noncompliance/arya_test_run/B_solve_coef.R')
+source('/Users/ag5276/Documents/Github/randomization_noncompliance/arya_test_run/B_calculate_intersections.R')
+source('/Users/ag5276/Documents/Github/randomization_noncompliance/arya_test_run/B_find_intervals.R')
+source('/Users/ag5276/Documents/Github/randomization_noncompliance/arya_test_run/B_AR_algo2.R')
 
 cat("\n", strrep("=", 70), "\n")
 cat("ALGORITHM 2: FAST AR PERMUTATION TEST ON ALO DATA\n")
@@ -30,9 +31,10 @@ cat(strrep("=", 70), "\n\n")
 # ==============================================================================
 # STEP 1: Load and prepare data
 # ==============================================================================
+
 cat("Loading ALO dataset...\n")
-data_dir <- "/Users/ag5276/Documents/Github/randomization_noncompliance/arya_test_run/data/ALO_data.csv"
-data <- read.csv(data_dir, header=TRUE, sep=",")
+data_file <- file.path(code_dir, "data", "ALO_data.csv")
+data <- read.csv(data_file, header=TRUE, sep=",")
 
 # Filter to males
 data_m <- data[which(data$sex=="M"), ]
@@ -71,12 +73,9 @@ colnames(data_ssp_m1) <- c('Y_observed', 'D_observed', 'assignment',
                            'x1', 'x2', 'x3', 'x4', 'x5', 'x6')
 
 # Center covariates
-data_ssp_m1[,'x1'] <- data_ssp_m1[,'x1'] - mean(data_ssp_m1[,'x1'])
-data_ssp_m1[,'x2'] <- data_ssp_m1[,'x2'] - mean(data_ssp_m1[,'x2'])
-data_ssp_m1[,'x3'] <- data_ssp_m1[,'x3'] - mean(data_ssp_m1[,'x3'])
-data_ssp_m1[,'x4'] <- data_ssp_m1[,'x4'] - mean(data_ssp_m1[,'x4'])
-data_ssp_m1[,'x5'] <- data_ssp_m1[,'x5'] - mean(data_ssp_m1[,'x5'])
-data_ssp_m1[,'x6'] <- data_ssp_m1[,'x6'] - mean(data_ssp_m1[,'x6'])
+for (i in 4:9) {
+  data_ssp_m1[, i] <- data_ssp_m1[, i] - mean(data_ssp_m1[, i])
+}
 
 N1 <- sum(data_ssp_m1$assignment)
 N0 <- nrow(data_ssp_m1) - N1
