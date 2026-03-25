@@ -42,7 +42,7 @@ N <- 100
 N1 <- 50  # Treated
 N0 <- 50  # Control
 rho <- 0.95
-gamma <- 0
+gamma <- 1
 n_permutations <- 1000
 n_runs <- 4  # Run 4 times to check variability
 
