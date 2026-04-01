@@ -132,7 +132,7 @@ cat(strrep("=", 80), "\n\n")
 # Parameters
 gamma_values <- c(0, 0.5, 1)      # Instrument strength
 tau_values <- c(0, 0.5, 1)        # Treatment effects
-n_sims <- 100                 # Number of simulations per cell
+n_sims <- 10000                 # Number of simulations per cell
 n_perms <- 100                    # Permutations per simulation
 
 # Storage for results
