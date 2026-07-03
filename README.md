@@ -1,59 +1,66 @@
-Randomization-Based Confidence Sets for the Local Average Treatment
-Effect
+RI for LATE
 ================
-Implementation based on Aronow, Chang, and Lopatto (2025)
-2026-07-03
+
+**Author:** Arya Gadage and Haoge Chang<br/> **Last updated:** July 03,
+2026
 
 # Introduction
 
-# randomization_noncompliance
+This package implements the randomization-based inferential procedure
+for the Local Average Treatment Effect (LATE) developed in
+[\[2\]](https://academic.oup.com/biomet/article/113/2/asag010/8487895)
+and [\[4\]](https://academic.oup.com/jrsssa/article/168/1/109/7084141).
 
-Randomization-Based Confidence Sets for the Local Average Treatment
-Effect
+## Overview
 
-This repository is a branch of the Randomization IV repository. It is
-intended for testing, editing, and debugging the original codebase, with
-the final version published here to serve as a “replication package”.
+In randomized experiments, participants do not always take the treatment
+they were assigned to — the treatment they actually receive can differ
+from their assignment. This gap is called **noncompliance**. When it is
+present, a natural target of inference is the **Local Average Treatment
+Effect (LATE)** [\[3\]](https://www.jstor.org/stable/2951620): the
+average causal effect of treatment among **compliers**, the
+subpopulation whose treatment status changes as a result of treatment
+assignment.
 
-This package implements the Anderson-Rubin permutation test for
-constructing confidence intervals in randomized experiments with
-noncompliance, as developed in:
+To state this precisely, consider a sample of individuals
+$i = 1, \ldots, n$, and for each let
 
-**Aronow, P. M., Chang, H., & Lopatto, P. (2025).** Randomization-Based
-Confidence Sets for the Local Average Treatment Effect. *Biometrika*.
+- $Y_i(1), Y_i(0)$ — the potential outcomes under treatment and control;
+- $D_i(1), D_i(0)$ — the treatment actually taken when assigned to
+  treatment and to control.
 
-## The Problem
+A **complier** is an individual with $D_i(1) > D_i(0)$: they take the
+treatment when assigned to it, but not otherwise. We use
+$\mathcal{C}=\{i \,:\, D_i(1) > D_i(0)\}$ to denote the set of
+compliers. The LATE is the average treatment effect over this group,
 
-In randomized experiments, participants don’t always follow their
-assigned treatment:
+$$
+\tau_{\text{LATE}} \;=\; \frac{1}{n_c} \sum_{i \in \mathcal{C}} \bigl( Y_i(1) - Y_i(0) \bigr),
+$$
 
-- **Random Assignment (Z)**: Who was *invited* to treatment
-- **Actual Treatment (D)**: Who *actually* participated  
-- **Noncompliance**: The gap between assignment and participation
+where $n_c = |\mathcal{C}|$ is the number of compliers. This package
+provides a randomization-based inferential procedure for
+$\tau_{\text{LATE}}$ with two complementary guarantees:
 
-**Example:** In an education program: - 500 students randomly invited to
-tutoring (Z=1) - Only 225 actually attend (D=1) - **Compliance rate:
-45%**
+- **Tests and p-values** are *finite-sample valid* for testing the sharp
+  null $Y_i(1) = Y_i(0)$ for all $i \in \mathcal{C}$, and
+  *asymptotically valid* for testing $\tau_{\text{LATE}} =0$ (under
+  treatment-effect heterogeneity).
+- **Confidence sets** are *finite-sample exact* under treatment-effect
+  additive homogeneity ($Y_i(1) = Y_i(0) + \tau$ for all
+  $i \in \mathcal{C}$, with $\tau$ not depending on $i$), and
+  *asymptotically valid* for the LATE under heterogeneity. The
+  procedures are robust against low compliance rates.
 
-Standard methods like 2SLS can give misleading confidence intervals when
-compliance is low or the instrument is weak. This package provides valid
-randomization-based inference regardless of compliance rates.
+The package supports covariate adjustment via linear regression, which
+can improve precision and guard against chance covariate imbalance.
 
-## What This Package Does
+# (Important) Complete Randomization Design
 
-This package provides **two efficient algorithms** to construct
-confidence sets for the Local Average Treatment Effect (LATE):
-
-1.  **Algorithm 1** (Exhaustive): Checks all intervals systematically
-2.  **Algorithm 2** (Fast): Jumps between crossing points - **6-7x
-    faster**
-
-Both algorithms: - Provide **finite-sample exact** confidence sets under
-treatment effect homogeneity - Remain **asymptotically valid** for LATE
-under treatment effect heterogeneity - Work with **any compliance rate**
-(even very low compliance) - Require no asymptotic approximations
-
-# Installation
+The package currently supports completely randomized designs with a
+binary treatment. The remaining statistical regularity conditions are
+stated in
+[\[2\]](https://academic.oup.com/biomet/article/113/2/asag010/8487895).
 
 ``` r
 # Source the required files
@@ -419,44 +426,19 @@ cat("F-statistic:", round(f_stat, 2), "\n")
 
 # References
 
-Anderson, T. W., & Rubin, H. (1949). Estimation of the parameters of a
-single equation in a complete system of stochastic equations. *Annals of
-Mathematical Statistics*, 20(1), 46-63.
+\[1\] Anderson, T. W., & Rubin, H. (1949). Estimation of the parameters
+of a single equation in a complete system of stochastic equations.
+*Annals of Mathematical Statistics*, 20(1), 46-63.
 
-Aronow, P. M., Chang, H., & Lopatto, P. (2025). Randomization-Based
-Confidence Sets for the Local Average Treatment Effect. *Biometrika*.
+\[2\] Aronow, P. M., Chang, H., & Lopatto, P. (2026).
+Randomization-Based Confidence Sets for the Local Average Treatment
+Effect. *Biometrika*, 113(2).
 
-Imbens, G. W., & Rosenbaum, P. R. (2005). Robust, accurate confidence
-intervals with a weak instrument: quarter of birth and education.
-*Journal of the Royal Statistical Society: Series A*, 168(1), 109-126.
+\[3\] Imbens, G. W., & Angrist, J. D. (1994). Identification and
+Estimation of Local Average Treatment Effects. Econometrica, 62(2),
+467-475.
 
-# Session Info
-
-``` r
-sessionInfo()
-#> R version 4.4.2 (2024-10-31 ucrt)
-#> Platform: x86_64-w64-mingw32/x64
-#> Running under: Windows 11 x64 (build 26200)
-#> 
-#> Matrix products: default
-#> 
-#> 
-#> locale:
-#> [1] LC_COLLATE=English_United States.utf8 
-#> [2] LC_CTYPE=English_United States.utf8   
-#> [3] LC_MONETARY=English_United States.utf8
-#> [4] LC_NUMERIC=C                          
-#> [5] LC_TIME=English_United States.utf8    
-#> 
-#> time zone: America/New_York
-#> tzcode source: internal
-#> 
-#> attached base packages:
-#> [1] stats     graphics  grDevices utils     datasets  methods   base     
-#> 
-#> loaded via a namespace (and not attached):
-#>  [1] compiler_4.4.2    fastmap_1.2.0     cli_3.6.3         tools_4.4.2      
-#>  [5] htmltools_0.5.8.1 rstudioapi_0.17.1 yaml_2.3.10       rmarkdown_2.29   
-#>  [9] knitr_1.49        xfun_0.49         digest_0.6.37     rlang_1.1.4      
-#> [13] evaluate_1.0.1
-```
+\[4\] Imbens, G. W., & Rosenbaum, P. R. (2005). Robust, accurate
+confidence intervals with a weak instrument: quarter of birth and
+education. *Journal of the Royal Statistical Society: Series A*, 168(1),
+109-126.
