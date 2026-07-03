@@ -1,66 +1,61 @@
----
-title: "Randomization-Based Confidence Sets for the Local Average Treatment Effect"
-author: "Implementation based on Aronow, Chang, and Lopatto (2025)"
-date: "`r Sys.Date()`"
-output: github_document
-vignette: >
-  %\VignetteIndexEntry{Anderson-Rubin Permutation Tests for Noncompliance}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.width = 7,
-  fig.height = 5
-)
-```
+Randomization-Based Confidence Sets for the Local Average Treatment
+Effect
+================
+Implementation based on Aronow, Chang, and Lopatto (2025)
+2026-07-03
 
 # Introduction
 
 # randomization_noncompliance
-Randomization-Based Confidence Sets for the Local Average Treatment Effect
 
-This repository is a branch of the Randomization IV repository. 
-It is intended for testing, editing, and debugging the original codebase, with the final version published here to serve as a "replication package".
+Randomization-Based Confidence Sets for the Local Average Treatment
+Effect
 
-This package implements the Anderson-Rubin permutation test for constructing confidence intervals in randomized experiments with noncompliance, as developed in:
+This repository is a branch of the Randomization IV repository. It is
+intended for testing, editing, and debugging the original codebase, with
+the final version published here to serve as a “replication package”.
 
-**Aronow, P. M., Chang, H., & Lopatto, P. (2025).** Randomization-Based Confidence Sets for the Local Average Treatment Effect. *Biometrika*.
+This package implements the Anderson-Rubin permutation test for
+constructing confidence intervals in randomized experiments with
+noncompliance, as developed in:
+
+**Aronow, P. M., Chang, H., & Lopatto, P. (2025).** Randomization-Based
+Confidence Sets for the Local Average Treatment Effect. *Biometrika*.
 
 ## The Problem
 
-In randomized experiments, participants don't always follow their assigned treatment:
+In randomized experiments, participants don’t always follow their
+assigned treatment:
 
 - **Random Assignment (Z)**: Who was *invited* to treatment
 - **Actual Treatment (D)**: Who *actually* participated  
 - **Noncompliance**: The gap between assignment and participation
 
-**Example:** In an education program:
-- 500 students randomly invited to tutoring (Z=1)
-- Only 225 actually attend (D=1)
-- **Compliance rate: 45%**
+**Example:** In an education program: - 500 students randomly invited to
+tutoring (Z=1) - Only 225 actually attend (D=1) - **Compliance rate:
+45%**
 
-Standard methods like 2SLS can give misleading confidence intervals when compliance is low or the instrument is weak. This package provides valid randomization-based inference regardless of compliance rates.
+Standard methods like 2SLS can give misleading confidence intervals when
+compliance is low or the instrument is weak. This package provides valid
+randomization-based inference regardless of compliance rates.
 
 ## What This Package Does
 
-This package provides **two efficient algorithms** to construct confidence sets for the Local Average Treatment Effect (LATE):
+This package provides **two efficient algorithms** to construct
+confidence sets for the Local Average Treatment Effect (LATE):
 
-1. **Algorithm 1** (Exhaustive): Checks all intervals systematically
-2. **Algorithm 2** (Fast): Jumps between crossing points - **6-7x faster**
+1.  **Algorithm 1** (Exhaustive): Checks all intervals systematically
+2.  **Algorithm 2** (Fast): Jumps between crossing points - **6-7x
+    faster**
 
-Both algorithms:
-- Provide **finite-sample exact** confidence sets under treatment effect homogeneity
-- Remain **asymptotically valid** for LATE under treatment effect heterogeneity
-- Work with **any compliance rate** (even very low compliance)
-- Require no asymptotic approximations
+Both algorithms: - Provide **finite-sample exact** confidence sets under
+treatment effect homogeneity - Remain **asymptotically valid** for LATE
+under treatment effect heterogeneity - Work with **any compliance rate**
+(even very low compliance) - Require no asymptotic approximations
 
 # Installation
 
-```{r eval=FALSE}
+``` r
 # Source the required files
 source("B_solve_coef.R")
 source("B_calculate_intersections.R")
@@ -77,7 +72,7 @@ library(pbapply)
 
 ## Basic Example
 
-```{r eval=FALSE}
+``` r
 library(pbapply)
 
 # 1. Prepare your data
@@ -116,7 +111,7 @@ print(ci)
 
 ## Education Program with Low Compliance
 
-```{r eval=FALSE}
+``` r
 # Load data
 data <- read.csv("ALO_data.csv")
 
@@ -155,7 +150,7 @@ cat("Compliance rate:",
 
 ## Run Analysis
 
-```{r eval=FALSE}
+``` r
 # Setup
 N1 <- sum(data_table$assignment)
 N0 <- nrow(data_table) - N1
@@ -180,7 +175,7 @@ print(ci_ar)
 
 ## Compare with 2SLS
 
-```{r eval=FALSE}
+``` r
 library(ivreg)
 library(lmtest)
 library(sandwich)
@@ -203,17 +198,21 @@ cat("AR 95% CI: [", round(ci_ar[[1]][1], 3), ",", round(ci_ar[[1]][2], 3), "]\n"
 # AR 95% CI: [ 0.152 , 0.548 ]
 ```
 
-**Key takeaway:** The AR confidence interval is wider, appropriately accounting for the weak instrument from low (45%) compliance.
+**Key takeaway:** The AR confidence interval is wider, appropriately
+accounting for the weak instrument from low (45%) compliance.
 
 # Algorithm Comparison
 
-This section demonstrates the performance differences between Algorithm 1 and Algorithm 2, and shows how the number of permutations affects results.
+This section demonstrates the performance differences between Algorithm
+1 and Algorithm 2, and shows how the number of permutations affects
+results.
 
 ## Comparison 1: Algorithm 1 vs Algorithm 2 (1000 Permutations)
 
-Both algorithms give identical results but differ dramatically in speed. Here's a real comparison on the ALO dataset:
+Both algorithms give identical results but differ dramatically in speed.
+Here’s a real comparison on the ALO dataset:
 
-```{r eval=FALSE}
+``` r
 # Using the same prepared data from above
 # Generate 1000 permutations (same for both algorithms)
 set.seed(123)
@@ -232,19 +231,20 @@ time2 <- system.time({
 
 **Results:**
 
-| Metric | Algorithm 1 | Algorithm 2 | 
-|--------|-------------|-------------|
-| Runtime | 45.2 minutes | 6.8 minutes | 
-| 95% CI | [0.152, 0.548] | [0.152, 0.548] | 
-| CI Width | 0.396 | 0.396 | 
+| Metric   | Algorithm 1      | Algorithm 2      |
+|----------|------------------|------------------|
+| Runtime  | 45.2 minutes     | 6.8 minutes      |
+| 95% CI   | \[0.152, 0.548\] | \[0.152, 0.548\] |
+| CI Width | 0.396            | 0.396            |
 
-**Key Finding:** Algorithm 2 is **6-7x faster** while producing **identical** confidence intervals.
+**Key Finding:** Algorithm 2 is **6-7x faster** while producing
+**identical** confidence intervals.
 
 ## Comparison 2: 1000 vs 10000 Permutations (Algorithm 2)
 
-Does using more permutations improve precision? Here's a comparison:
+Does using more permutations improve precision? Here’s a comparison:
 
-```{r eval=FALSE}
+``` r
 # Run with 1000 permutations
 zsim_1000 <- pbsapply(1:1000, gen_assignment_CR_index, N1 = N1, N0 = N0)
 time_1000 <- system.time({
@@ -260,23 +260,27 @@ time_10000 <- system.time({
 
 **Results:**
 
-| Metric | 1000 Permutations | 10000 Permutations | Difference |
-|--------|-------------------|--------------------|-----------| 
-| Runtime | 0.37 minutes | 55.44 minutes | 150x longer |
-| 95% CI Lower | -0.4215 | -0.4389 | 0.0174 |
-| 95% CI Upper | 0.4027 | 0.4120 | 0.0093 |
-| CI Width | 0.8242 | 0.8509 | 0.0267 |
+| Metric       | 1000 Permutations | 10000 Permutations | Difference  |
+|--------------|-------------------|--------------------|-------------|
+| Runtime      | 0.37 minutes      | 55.44 minutes      | 150x longer |
+| 95% CI Lower | -0.4215           | -0.4389            | 0.0174      |
+| 95% CI Upper | 0.4027            | 0.4120             | 0.0093      |
+| CI Width     | 0.8242            | 0.8509             | 0.0267      |
 
-**Key Finding:** Using 10x more permutations takes 150x longer but gives **similar** results (difference < 0.03).
+**Key Finding:** Using 10x more permutations takes 150x longer but gives
+**similar** results (difference \< 0.03).
 
 ## Dose-Response Simulations
 
-To validate the algorithm under continuous treatment (dose-response) with varying instrument strength, we ran simulations following Imbens & Rosenbaum (2005). 
+To validate the algorithm under continuous treatment (dose-response)
+with varying instrument strength, we ran simulations following Imbens &
+Rosenbaum (2005).
 
 **Data generating process:**
 
-- **Outcome model:** Yi(di(j)) = ρW1i + √(1-ρ²)W2i where ρ = 0.95 (high endogeneity)
-- **Dose model:** di(0) = |Xi|W1i, di(1) = γ + di(0)
+- **Outcome model:** Yi(di(j)) = ρW1i + √(1-ρ²)W2i where ρ = 0.95 (high
+  endogeneity)
+- **Dose model:** di(0) = \|Xi\|W1i, di(1) = γ + di(0)
 - **Treatment effect:** Yi(di(1)) = Yi(di(0)) + τ(di(1) - di(0))
 - **Sample:** N = 100 (50 treated, 50 control)
 
@@ -299,9 +303,12 @@ Coverage rates (%) from 100 simulations per cell:
 
 **Interpretation:**
 
-- With no/weak instrument (γ=0, 0.5), most CIs are infinite → coverage ≈ 95-99% (correct)
-- With strong instrument (γ=1), all CIs are finite → coverage ≈ 93-95% (correct)
-- All cells show proper coverage, validating the algorithm for dose-response designs
+- With no/weak instrument (γ=0, 0.5), most CIs are infinite → coverage ≈
+  95-99% (correct)
+- With strong instrument (γ=1), all CIs are finite → coverage ≈ 93-95%
+  (correct)
+- All cells show proper coverage, validating the algorithm for
+  dose-response designs
 
 ### Results: 10000 Permutations
 
@@ -309,23 +316,24 @@ Coverage rates (%) from 100 simulations per cell:
 
 | γ (IV Strength) | τ = 0 | τ = 0.5 | τ = 1 |
 |-----------------|-------|---------|-------|
-| 0.0 (No IV)     | --    | --      | --    |
-| 0.5 (Weak IV)   | --    | --      | --    |
-| 1.0 (Strong IV) | --    | --      | --    |
+| 0.0 (No IV)     | –     | –       | –     |
+| 0.5 (Weak IV)   | –     | –       | –     |
+| 1.0 (Strong IV) | –     | –       | –     |
 
-**Mean runtime:** ~[TBD] seconds per simulation
+**Mean runtime:** ~\[TBD\] seconds per simulation
 
-**Interpretation:** [To be filled in after running 10000 permutation simulations]
+**Interpretation:** \[To be filled in after running 10000 permutation
+simulations\]
 
 ## Combined Summary
 
-Here's a full comparison of all configurations:
+Here’s a full comparison of all configurations:
 
-| Configuration | Runtime | 95% CI | 
-|---------------|---------|--------|
-| Algo 1, 1000 perms | 45 min | [0.152, 0.548] |
-| **Algo 2, 1000 perms** | **7 min** | **[0.152, 0.548]** | 
-| Algo 2, 10000 perms | 70 min | [0.152, 0.548] | 
+| Configuration          | Runtime   | 95% CI               |
+|------------------------|-----------|----------------------|
+| Algo 1, 1000 perms     | 45 min    | \[0.152, 0.548\]     |
+| **Algo 2, 1000 perms** | **7 min** | **\[0.152, 0.548\]** |
+| Algo 2, 10000 perms    | 70 min    | \[0.152, 0.548\]     |
 
 # Data Preparation
 
@@ -333,16 +341,16 @@ Here's a full comparison of all configurations:
 
 Your `data_table` must contain these columns:
 
-| Column | Description | Example |
-|--------|-------------|---------|
-| `Y_observed` | Outcome variable | GPA, earnings, test score |
-| `D_observed` | Actual treatment (0/1) | Did they participate? |
-| `assignment` | Random assignment (0/1) | Were they invited? |
-| `x1, x2, ...` | Covariates (centered) | Baseline variables |
+| Column        | Description             | Example                   |
+|---------------|-------------------------|---------------------------|
+| `Y_observed`  | Outcome variable        | GPA, earnings, test score |
+| `D_observed`  | Actual treatment (0/1)  | Did they participate?     |
+| `assignment`  | Random assignment (0/1) | Were they invited?        |
+| `x1, x2, ...` | Covariates (centered)   | Baseline variables        |
 
 ## Handling Categorical Covariates
 
-```{r eval=FALSE}
+``` r
 # Example: Study habits (categorical with 5 levels)
 data$lastmin_never <- as.numeric(data$lastmin == "never")
 data$lastmin_sometimes <- as.numeric(data$lastmin == "sometimes")
@@ -368,7 +376,7 @@ data_table <- data.frame(
 
 ## Confidence Level
 
-```{r eval=FALSE}
+``` r
 # 90% confidence interval (narrower)
 ci_90 <- AR_algo2_custom(data_table, N1, N0, zsim, alpha = 0.90)
 
@@ -393,7 +401,7 @@ This is often **correct**, not an error! Wide intervals indicate:
 
 **Check instrument strength:**
 
-```{r eval=FALSE}
+``` r
 # First-stage F-statistic
 stage1 <- lm(D_observed ~ assignment, data = data_table)
 f_stat <- summary(stage1)$fstatistic[1]
@@ -405,20 +413,50 @@ cat("F-statistic:", round(f_stat, 2), "\n")
 
 **Solutions:**
 
-1. Use Algorithm 2 (not Algorithm 1)
-2. Reduce permutations to 500 or 100 for testing
-3. Verify `zsim` is a matrix (not being regenerated)
+1.  Use Algorithm 2 (not Algorithm 1)
+2.  Reduce permutations to 500 or 100 for testing
+3.  Verify `zsim` is a matrix (not being regenerated)
 
 # References
 
-Anderson, T. W., & Rubin, H. (1949). Estimation of the parameters of a single equation in a complete system of stochastic equations. *Annals of Mathematical Statistics*, 20(1), 46-63.
+Anderson, T. W., & Rubin, H. (1949). Estimation of the parameters of a
+single equation in a complete system of stochastic equations. *Annals of
+Mathematical Statistics*, 20(1), 46-63.
 
-Aronow, P. M., Chang, H., & Lopatto, P. (2025). Randomization-Based Confidence Sets for the Local Average Treatment Effect. *Biometrika*.
+Aronow, P. M., Chang, H., & Lopatto, P. (2025). Randomization-Based
+Confidence Sets for the Local Average Treatment Effect. *Biometrika*.
 
-Imbens, G. W., & Rosenbaum, P. R. (2005). Robust, accurate confidence intervals with a weak instrument: quarter of birth and education. *Journal of the Royal Statistical Society: Series A*, 168(1), 109-126.
+Imbens, G. W., & Rosenbaum, P. R. (2005). Robust, accurate confidence
+intervals with a weak instrument: quarter of birth and education.
+*Journal of the Royal Statistical Society: Series A*, 168(1), 109-126.
 
 # Session Info
 
-```{r}
+``` r
 sessionInfo()
+#> R version 4.4.2 (2024-10-31 ucrt)
+#> Platform: x86_64-w64-mingw32/x64
+#> Running under: Windows 11 x64 (build 26200)
+#> 
+#> Matrix products: default
+#> 
+#> 
+#> locale:
+#> [1] LC_COLLATE=English_United States.utf8 
+#> [2] LC_CTYPE=English_United States.utf8   
+#> [3] LC_MONETARY=English_United States.utf8
+#> [4] LC_NUMERIC=C                          
+#> [5] LC_TIME=English_United States.utf8    
+#> 
+#> time zone: America/New_York
+#> tzcode source: internal
+#> 
+#> attached base packages:
+#> [1] stats     graphics  grDevices utils     datasets  methods   base     
+#> 
+#> loaded via a namespace (and not attached):
+#>  [1] compiler_4.4.2    fastmap_1.2.0     cli_3.6.3         tools_4.4.2      
+#>  [5] htmltools_0.5.8.1 rstudioapi_0.17.1 yaml_2.3.10       rmarkdown_2.29   
+#>  [9] knitr_1.49        xfun_0.49         digest_0.6.37     rlang_1.1.4      
+#> [13] evaluate_1.0.1
 ```
